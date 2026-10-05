@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, ArrowRight, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import { mockData } from '../../mock';
@@ -17,21 +17,29 @@ export default function AdminLogin() {
     setIsLoading(true);
     setErrorMessage('');
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
+          email: cleanEmail,
+          password: cleanPassword
         });
 
         if (error) {
-          setErrorMessage(error.message);
+          if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
+            setErrorMessage('Supabase Auth: Email not confirmed yet. Run the SQL confirmation snippet in Supabase SQL editor or use AdminPassword@2026.');
+          } else {
+            setErrorMessage(error.message || 'Invalid email or password');
+          }
           setIsLoading(false);
           return;
         }
 
-        if (data.session) {
+        if (data?.session || data?.user) {
           localStorage.setItem('vt_admin_authenticated', 'true');
+          localStorage.setItem('vt_admin_email', cleanEmail);
           navigate('/admin');
           return;
         }
@@ -40,22 +48,11 @@ export default function AdminLogin() {
         setIsLoading(false);
         return;
       }
-    }
-
-    // Demo Mode fallback for initial setup/testing
-    if (email === 'admin@vedikatours.com' && password === 'admin123') {
-      localStorage.setItem('vt_admin_authenticated', 'true');
-      navigate('/admin');
     } else {
-      setErrorMessage('Invalid credentials. (For Demo test use: admin@vedikatours.com / admin123 or connect Supabase Auth)');
+      setErrorMessage('Supabase is not configured.');
     }
 
     setIsLoading(false);
-  };
-
-  const handleDemoBypass = () => {
-    localStorage.setItem('vt_admin_authenticated', 'true');
-    navigate('/admin');
   };
 
   return (
@@ -138,19 +135,6 @@ export default function AdminLogin() {
               <ArrowRight className="w-4 h-4" />
             </Button>
           </form>
-
-          {/* Quick Demo Access Bar */}
-          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-            <div className="text-[11px] text-gray-400 mb-2">Development Demo Mode:</div>
-            <button
-              type="button"
-              onClick={handleDemoBypass}
-              className="w-full text-xs font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 py-2.5 px-3 rounded-xl transition-colors flex items-center justify-center space-x-1.5"
-            >
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>Instant One-Click Demo Access</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>

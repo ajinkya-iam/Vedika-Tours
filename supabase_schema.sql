@@ -86,6 +86,7 @@ DROP POLICY IF EXISTS "Public can view active cars" ON public.cars;
 DROP POLICY IF EXISTS "Authenticated admins can manage cars" ON public.cars;
 DROP POLICY IF EXISTS "Public can view pricing settings" ON public.pricing_settings;
 DROP POLICY IF EXISTS "Authenticated admins can manage pricing settings" ON public.pricing_settings;
+DROP POLICY IF EXISTS "Public can view bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Public can insert bookings" ON public.bookings;
 DROP POLICY IF EXISTS "Authenticated admins can manage bookings" ON public.bookings;
 
@@ -137,7 +138,7 @@ WHERE NOT EXISTS (SELECT 1 FROM public.pricing_settings);
 
 -- Insert Default Fleet Cars (if empty)
 INSERT INTO public.cars (name, category, seating_capacity, luggage_capacity, image_url, price_per_km, base_fare, min_km_per_day, has_ac, description)
-SELECT 'Maruti Dzire', 'Sedan', 4, 2, 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/b034w4s2_Dzire.jpeg', 12.00, 1500.00, 250.00, true, 'Comfortable sedan for small families and city / outstation travel.'
+SELECT 'Maruti Dzire', 'Sedan', 4, 2, 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/9apj97mz_SwiftDzire.jpeg', 12.00, 1500.00, 250.00, true, 'Comfortable sedan for small families and city / outstation travel.'
 WHERE NOT EXISTS (SELECT 1 FROM public.cars WHERE name = 'Maruti Dzire');
 
 INSERT INTO public.cars (name, category, seating_capacity, luggage_capacity, image_url, price_per_km, base_fare, min_km_per_day, has_ac, description)
@@ -151,3 +152,9 @@ WHERE NOT EXISTS (SELECT 1 FROM public.cars WHERE name = 'Toyota Innova Crysta')
 INSERT INTO public.cars (name, category, seating_capacity, luggage_capacity, image_url, price_per_km, base_fare, min_km_per_day, has_ac, description)
 SELECT 'Tempo Traveller', 'Mini Bus', 17, 8, 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/jgivmkig_tempo.jpeg', 26.00, 4500.00, 300.00, true, 'Ideal for large groups, wedding transfers, Ashtavinayak and Konkan tours.'
 WHERE NOT EXISTS (SELECT 1 FROM public.cars WHERE name = 'Tempo Traveller');
+
+-- Update existing cars to the correct vehicle images
+UPDATE public.cars SET image_url = 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/9apj97mz_SwiftDzire.jpeg' WHERE name ILIKE '%Dzire%';
+UPDATE public.cars SET image_url = 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/86yf1r45_Ertiga.jpeg' WHERE name ILIKE '%Ertiga%';
+UPDATE public.cars SET image_url = 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/kn2rjj02_Innova.jpeg' WHERE name ILIKE '%Innova%';
+UPDATE public.cars SET image_url = 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/jgivmkig_tempo.jpeg' WHERE name ILIKE '%Tempo%';

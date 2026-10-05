@@ -6,7 +6,7 @@ import {
   Search, Eye, Database, Copy, Check, ShieldCheck, X, ChevronRight, TrendingUp
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { supabase, isSupabaseConfigured, DEFAULT_CARS, DEFAULT_PRICING } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured, DEFAULT_CARS, DEFAULT_PRICING, getCarImageUrl } from '../../lib/supabaseClient';
 import { mockData } from '../../mock';
 
 export default function AdminDashboard() {
@@ -108,7 +108,13 @@ export default function AdminDashboard() {
           .order('created_at', { ascending: true });
 
         if (!cErr && carsData && carsData.length > 0) {
-          setCars(carsData);
+          const normalizedCars = carsData.map(c => ({
+            ...c,
+            image_url: getCarImageUrl(c.image_url, c.name)
+          }));
+          setCars(normalizedCars);
+          const disabledNames = normalizedCars.filter(c => !c.is_active).map(c => c.name);
+          localStorage.setItem('vt_disabled_cars', JSON.stringify(disabledNames));
         }
 
         // 3. Fetch Pricing
@@ -233,13 +239,18 @@ export default function AdminDashboard() {
     const updatedStatus = !car.is_active;
     if (isSupabaseConfigured && supabase && dbStatus.tablesReady) {
       try {
-        await supabase.from('cars').update({ is_active: updatedStatus }).eq('id', car.id);
+        const { error } = await supabase.from('cars').update({ is_active: updatedStatus }).eq('id', car.id);
+        if (error) console.error('Error toggling active status in Supabase:', error);
       } catch (err) {
         console.warn('Error toggling active status:', err);
       }
     }
 
-    setCars(cars.map((c) => (c.id === car.id ? { ...c, is_active: updatedStatus } : c)));
+    const updatedCars = cars.map((c) => (c.id === car.id ? { ...c, is_active: updatedStatus } : c));
+    setCars(updatedCars);
+
+    const disabledNames = updatedCars.filter((c) => !c.is_active).map((c) => c.name);
+    localStorage.setItem('vt_disabled_cars', JSON.stringify(disabledNames));
   };
 
   const handleDeleteCar = async (carId) => {
@@ -790,9 +801,13 @@ CREATE POLICY "Authenticated admins can manage bookings" ON public.bookings FOR 
                     <h4 className="text-base font-bold text-gray-900">{car.name}</h4>
 
                     <img
-                      src={car.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341'}
+                      src={getCarImageUrl(car.image_url, car.name)}
                       alt={car.name}
-                      className="w-full h-32 object-contain my-3 rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = getCarImageUrl(null, car.name);
+                      }}
+                      className="w-full h-32 object-contain my-3 rounded-lg bg-gray-50/50 p-2"
                     />
 
                     <div className="space-y-1.5 text-xs text-gray-600">

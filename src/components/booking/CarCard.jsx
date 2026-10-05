@@ -1,7 +1,10 @@
 import React from 'react';
 import { Users, Briefcase, Snowflake, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { getCarImageUrl } from '../../lib/supabaseClient';
 
 export default function CarCard({ car, fare, isSelected, onSelect, distanceKm }) {
+  const carImageUrl = getCarImageUrl(car.image_url, car.name);
+
   return (
     <div
       onClick={() => onSelect(car)}
@@ -31,11 +34,15 @@ export default function CarCard({ car, fare, isSelected, onSelect, distanceKm })
 
       {/* Car Photo & Key Specs */}
       <div className="my-3 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-        <div className="sm:col-span-6 flex justify-center">
+        <div className="sm:col-span-6 flex justify-center bg-gray-50/50 p-2 rounded-xl">
           <img
-            src={car.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341'}
+            src={carImageUrl}
             alt={car.name}
-            className="w-full h-32 object-contain rounded-xl"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = getCarImageUrl(null, car.name);
+            }}
+            className="w-full h-32 object-contain rounded-xl transition-transform hover:scale-105"
           />
         </div>
 

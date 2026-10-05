@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  ArrowLeft, Calendar, Clock, MapPin, Car, Shield, CheckCircle, 
-  HelpCircle, Phone, MessageCircle, AlertCircle, Info, Sparkles 
+import {
+  ArrowLeft, Calendar, Clock, MapPin, Car, Shield, CheckCircle,
+  HelpCircle, Phone, MessageCircle, AlertCircle, Info, Sparkles
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { supabase, isSupabaseConfigured, DEFAULT_CARS, DEFAULT_PRICING } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured, DEFAULT_CARS, DEFAULT_PRICING, getCarImageUrl } from '../lib/supabaseClient';
 import { calculateRoadRoute, calculateFare, POPULAR_LOCATIONS } from '../lib/routingService';
 import LocationInput from '../components/booking/LocationInput';
 import RouteMap from '../components/booking/RouteMap';
@@ -45,9 +45,17 @@ export default function BookingPage() {
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
 
   // Fleet & Pricing Data
-  const [cars, setCars] = useState(DEFAULT_CARS);
+  const [cars, setCars] = useState(() => {
+    const disabledCars = JSON.parse(localStorage.getItem('vt_disabled_cars') || '[]');
+    const filtered = DEFAULT_CARS.filter(c => !disabledCars.some(d => d.toLowerCase().includes(c.name.toLowerCase())));
+    return filtered.length > 0 ? filtered : DEFAULT_CARS;
+  });
   const [pricingSettings, setPricingSettings] = useState(DEFAULT_PRICING);
-  const [selectedCar, setSelectedCar] = useState(DEFAULT_CARS[0]);
+  const [selectedCar, setSelectedCar] = useState(() => {
+    const disabledCars = JSON.parse(localStorage.getItem('vt_disabled_cars') || '[]');
+    const available = DEFAULT_CARS.filter(c => !disabledCars.some(d => d.toLowerCase().includes(c.name.toLowerCase())));
+    return available.length > 0 ? available[0] : DEFAULT_CARS[0];
+  });
 
   // Passenger Details State
   const [customerName, setCustomerName] = useState('');
@@ -72,14 +80,18 @@ export default function BookingPage() {
           .eq('is_active', true);
 
         if (!carsErr && carsData && carsData.length > 0) {
-          setCars(carsData);
+          const normalizedCars = carsData.map(c => ({
+            ...c,
+            image_url: getCarImageUrl(c.image_url, c.name)
+          }));
+          setCars(normalizedCars);
           // Match preselected car or default to first
           if (preselectedCarName) {
-            const found = carsData.find(c => c.name.toLowerCase().includes(preselectedCarName.toLowerCase()));
+            const found = normalizedCars.find(c => c.name.toLowerCase().includes(preselectedCarName.toLowerCase()));
             if (found) setSelectedCar(found);
-            else setSelectedCar(carsData[0]);
+            else setSelectedCar(normalizedCars[0]);
           } else {
-            setSelectedCar(carsData[0]);
+            setSelectedCar(normalizedCars[0]);
           }
         }
 
@@ -126,12 +138,12 @@ export default function BookingPage() {
   // Calculate Fare for selected car
   const currentFare = selectedCar && routeInfo?.distanceKm
     ? calculateFare({
-        distanceKm: routeInfo.distanceKm,
-        tripType,
-        car: selectedCar,
-        pricingSettings,
-        pickupTime
-      })
+      distanceKm: routeInfo.distanceKm,
+      tripType,
+      car: selectedCar,
+      pricingSettings,
+      pickupTime
+    })
     : null;
 
   // Handle Form Submission
@@ -366,22 +378,20 @@ _Please confirm my cab booking._`;
                       <button
                         type="button"
                         onClick={() => setTripType('one-way')}
-                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                          tripType === 'one-way'
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${tripType === 'one-way'
                             ? 'bg-white text-orange-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
-                        }`}
+                          }`}
                       >
                         One Way
                       </button>
                       <button
                         type="button"
                         onClick={() => setTripType('round-trip')}
-                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                          tripType === 'round-trip'
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all ${tripType === 'round-trip'
                             ? 'bg-white text-orange-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-900'
-                        }`}
+                          }`}
                       >
                         Round Trip
                       </button>
@@ -500,12 +510,12 @@ _Please confirm my cab booking._`;
                     {cars.map((car) => {
                       const fare = routeInfo?.distanceKm
                         ? calculateFare({
-                            distanceKm: routeInfo.distanceKm,
-                            tripType,
-                            car,
-                            pricingSettings,
-                            pickupTime
-                          })
+                          distanceKm: routeInfo.distanceKm,
+                          tripType,
+                          car,
+                          pricingSettings,
+                          pickupTime
+                        })
                         : null;
 
                       return (

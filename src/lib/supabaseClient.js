@@ -16,6 +16,25 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+export const VEHICLE_IMAGES = {
+  dzire: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/9apj97mz_SwiftDzire.jpeg',
+  ertiga: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/86yf1r45_Ertiga.jpeg',
+  innova: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/kn2rjj02_Innova.jpeg',
+  tempo: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/jgivmkig_tempo.jpeg'
+};
+
+// Image resolver helper for car fleet: fixes the expired Dzire link and defaults safely
+export const getCarImageUrl = (imageUrl, carName = '') => {
+  if (!imageUrl || imageUrl.includes('b034w4s2_Dzire') || imageUrl.includes('placeholder')) {
+    const name = (carName || '').toLowerCase();
+    if (name.includes('ertiga')) return VEHICLE_IMAGES.ertiga;
+    if (name.includes('innova')) return VEHICLE_IMAGES.innova;
+    if (name.includes('tempo')) return VEHICLE_IMAGES.tempo;
+    return VEHICLE_IMAGES.dzire;
+  }
+  return imageUrl;
+};
+
 // Default fallback cars from existing fleet with pricing defaults
 export const DEFAULT_CARS = [
   {
@@ -24,7 +43,7 @@ export const DEFAULT_CARS = [
     category: 'Sedan',
     seating_capacity: 4,
     luggage_capacity: 2,
-    image_url: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/b034w4s2_Dzire.jpeg',
+    image_url: 'https://customer-assets.emergentagent.com/job_panvel-travel/artifacts/9apj97mz_SwiftDzire.jpeg',
     price_per_km: 12,
     base_fare: 1500,
     min_km_per_day: 250,

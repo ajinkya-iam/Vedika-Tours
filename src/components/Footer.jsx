@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Car, Shield } from 'lucide-react';
+import { MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { mockData } from '../mock';
 
@@ -34,12 +34,6 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/book" className="text-orange-400 hover:text-orange-300 font-semibold flex items-center space-x-1 transition-colors">
-                  <Car className="w-4 h-4 mr-1" />
-                  <span>Book Online (KM Calculator)</span>
-                </Link>
-              </li>
-              <li>
                 <button onClick={() => scrollToSection('home')} className="text-gray-300 hover:text-orange-400 transition-colors">
                   Home
                 </button>
@@ -60,9 +54,8 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <Link to="/admin" className="text-gray-500 hover:text-gray-300 text-xs flex items-center space-x-1 pt-2 transition-colors">
-                  <Shield className="w-3 h-3 mr-1" />
-                  <span>Admin Portal</span>
+                <Link to="/admin" className="text-gray-300 hover:text-orange-400 transition-colors">
+                  Admin Portal
                 </Link>
               </li>
             </ul>
